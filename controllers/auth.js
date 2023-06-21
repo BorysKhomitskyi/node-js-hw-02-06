@@ -11,6 +11,12 @@ const register = async (req, res) => {
 
   const user = await User.findOne({ email });
 
+  const payload = {
+    id: user._id,
+  };
+
+  const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "23h" });
+
   if (user) {
     throw HttpError(409, "Email in use");
   }
@@ -24,6 +30,7 @@ const register = async (req, res) => {
   });
 
   res.status(201).json({
+    token: token,
     user: {
       email: result.email,
       subscription: result.subscription,
