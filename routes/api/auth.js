@@ -1,32 +1,54 @@
 const express = require("express");
 
-const ctrl = require("../../controllers/auth");
+const {
+  validateBody,
+  authenticate,
+  isValidId,
+  upload,
+} = require("../../middlewares");
 
-const { authenticate, validateBody, upload } = require("../../middlewares");
+const {
+  registerSchema,
+  emailSchema,
+  loginSchema,
+  updateSubscriptionSchema,
+} = require("../../schemas/");
 
-const { schemas } = require("../../models/user");
+const {
+  users: {
+    register,
+    verifyEmail,
+    resendVerifyEmail,
+    login,
+    getCurrent,
+    logout,
+    updateSubscription,
+    updateAvatar,
+  },
+} = require("../../controllers");
 
 const router = express.Router();
 
-router.post("/register", validateBody(schemas.registerSchema), ctrl.register);
+router.post("/register", validateBody(registerSchema), register);
 
-router.post("/login", validateBody(schemas.loginSchema), ctrl.login);
+router.post("/verify", validateBody(emailSchema), resendVerifyEmail);
 
-router.get("/current", authenticate, ctrl.getCurrent);
+router.get("/verify/:verificationToken", verifyEmail);
 
-router.post("/logout", authenticate, ctrl.logout);
+router.post("/login", validateBody(loginSchema), login);
 
-router.patch(
-  "/subscription",
-  authenticate,
-  validateBody(schemas.updateSubscriptionSchema),
-  ctrl.updateSubscription
-);
+router.get("/current", authenticate, getCurrent);
+
+router.post("/logout", authenticate, logout);
 
 router.patch(
-  "/avatars",
+  "/:id/subscription",
   authenticate,
-  upload.single("avatarURL"),
-  ctrl.updateAvatar
+  isValidId,
+  validateBody(updateSubscriptionSchema),
+  updateSubscription
 );
+
+router.patch("/avatars", authenticate, upload.single("avatar"), updateAvatar);
+
 module.exports = router;
